@@ -1,0 +1,45 @@
+package fr.kilian.backpackV2.listeners;
+
+import fr.kilian.backpackV2.Main;
+import fr.kilian.backpackV2.managers.BackpackManager;
+import fr.kilian.backpackV2.managers.CraftManager;
+import fr.kilian.backpackV2.managers.ForgeManager;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.ItemStack;
+import org.checkerframework.checker.nullness.qual.NonNull;
+
+public class PlayerInteractListener implements Listener {
+
+    @EventHandler
+    public void onInteract(@NonNull PlayerInteractEvent e) {
+        Player player = e.getPlayer();
+        ItemStack currentItem = player.getInventory().getItemInMainHand();
+        BackpackManager manager = Main.getInstance().getBackpackManager();
+
+        if(manager.isBackpack(currentItem)) {
+            e.setCancelled(true);
+            manager.openBackpack(currentItem, player.getUniqueId());
+        } else {
+            manager.sendDebugMessage(player, "Wrong item (PlayerInteractionEvent)");
+        }
+    }
+
+    @EventHandler
+    public void playerJoin(@NonNull PlayerJoinEvent e){
+        Player player = e.getPlayer();
+
+        ForgeManager forgeManager = Main.getInstance().getForgeManager();
+        CraftManager craftManager = Main.getInstance().getCraftManager();
+
+        player.discoverRecipe(craftManager.backpackCraft1);
+        player.discoverRecipe(craftManager.backpackCraft2);
+        player.discoverRecipe(craftManager.backpackCraft3);
+        player.discoverRecipe(forgeManager.forgeCraftKey);
+        player.discoverRecipe(craftManager.craftRuneCraftKey);
+        player.discoverRecipe(craftManager.enderRuneCraftKey);
+    }
+}

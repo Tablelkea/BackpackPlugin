@@ -3,6 +3,7 @@ package fr.kilian.backpackV2.listeners;
 import fr.kilian.backpackV2.Main;
 import fr.kilian.backpackV2.managers.BackpackManager;
 import fr.kilian.backpackV2.managers.ForgeManager;
+import fr.kilian.backpackV2.managers.ItemManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -34,111 +35,146 @@ public class ForgeListener implements Listener {
 
     @EventHandler
     public void onBreak(@NonNull BlockBreakEvent e) {
-        ForgeManager forge = Main.getInstance().getForgeManager();
-        if(forge.isForgeBlock(e.getBlock())) {
-            forge.unmarkForgeBlock(e.getBlock());
-            e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), forge.forgeItem());
+        ItemManager itemManager = Main.getInstance().getItemManager();
+        ForgeManager forgeManager = Main.getInstance().getForgeManager();
+        if(forgeManager.isForgeBlock(e.getBlock())) {
+            forgeManager.unmarkForgeBlock(e.getBlock());
+            e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), itemManager.forgeItem());
             e.setDropItems(false);
         }
     }
 
     @EventHandler
     public void onInteract(@NonNull PlayerInteractEvent e) {
-        ForgeManager forge = Main.getInstance().getForgeManager();
+        ForgeManager forgeManager = Main.getInstance().getForgeManager();
+        ItemManager itemManager = Main.getInstance().getItemManager();
+
         if(e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if(e.getClickedBlock() == null) return;
-        if(!forge.isForgeBlock(e.getClickedBlock())) return;
+        if(!forgeManager.isForgeBlock(e.getClickedBlock())) return;
 
         e.setCancelled(true);
         Player player = e.getPlayer();
 
         Inventory gui = Bukkit.createInventory(null, 27, "§6§l✦ Forge de Sac ✦");
 
-        for(int i = 0; i < 27; i++) gui.setItem(i, forge.voidItem());
+        for(int i = 0; i < 27; i++) gui.setItem(i, itemManager.voidItem());
 
-        gui.setItem(SLOT_SAC, forge.forgeSlotSacItem());
-        gui.setItem(SLOT_RUNE, forge.forgeSlotRuneItem());
-        gui.setItem(SLOT_CONFIRM, forge.forgeResultLockedItem());
+        gui.setItem(SLOT_SAC, itemManager.forgeSlotSacItem());
+        gui.setItem(SLOT_RUNE, itemManager.forgeSlotRuneItem());
+        gui.setItem(SLOT_CONFIRM, itemManager.forgeResultLockedItem());
 
         player.openInventory(gui);
     }
 
     @EventHandler
     public void onGuiClick(@NonNull InventoryClickEvent e) {
-        if(!(e.getWhoClicked() instanceof Player player)) return;
-        if(!e.getView().getTitle().equals("§6§l✦ Forge de Sac ✦")) return;
+        if (!(e.getWhoClicked() instanceof Player player)) return;
+        if (!e.getView().getTitle().equals("§6§l✦ Forge de Sac ✦")) return;
 
-        ForgeManager forge = Main.getInstance().getForgeManager();
-        BackpackManager manager = Main.getInstance().getBackpackManager();
+        BackpackManager backpackManager = Main.getInstance().getBackpackManager();
+        ItemManager itemManager = Main.getInstance().getItemManager();
         Inventory gui = e.getInventory();
         ItemStack currentItem = e.getCurrentItem();
-
         int slot = e.getSlot();
 
-        if(manager.isBackpack(currentItem) && e.getClickedInventory() == player.getInventory()){
-            if (currentItem != null) {
-                player.getInventory().remove(currentItem);
+        e.setCancelled(true);
+
+        if (currentItem == null || currentItem.getType().isAir()) return;
+
+        boolean clickedInPlayerInv = e.getClickedInventory() == player.getInventory();
+        boolean clickedInGui = e.getClickedInventory() == gui;
+
+        if (clickedInPlayerInv) {
+
+            if (backpackManager.isBackpack(currentItem)) {
+                ItemStack previousSac = gui.getItem(SLOT_SAC);
+
+                if (previousSac != null && backpackManager.isBackpack(previousSac)) {
+                    player.getInventory().addItem(previousSac);
+                }
+
+                player.getInventory().setItem(slot, null);
+                gui.setItem(SLOT_SAC, currentItem);
+
+            } else if (currentItem.isSimilar(itemManager.craftUpgradeItem()) ||
+                    currentItem.isSimilar(itemManager.enderChestUpgradeItem())) {
+
+                ItemStack previousRune = gui.getItem(SLOT_RUNE);
+
+                if (previousRune != null && !previousRune.isSimilar(itemManager.forgeSlotRuneItem())) {
+                    player.getInventory().addItem(previousRune);
+                }
+
+                player.getInventory().setItem(slot, null);
+                gui.setItem(SLOT_RUNE, currentItem);
             }
-            gui.setItem(SLOT_SAC, currentItem);
         }
 
-        if((currentItem.isSimilar(manager.craftUpgradeItem()) || currentItem.isSimilar(manager.enderChestUpgradeItem()) )&& e.getClickedInventory() == player.getInventory()){
-            player.getInventory().remove(currentItem);
-            gui.setItem(SLOT_RUNE, currentItem);
-        }
+        if (clickedInGui) {
 
-        if(slot != SLOT_SAC && slot != SLOT_RUNE) {
-            e.setCancelled(true);
+            if (slot == SLOT_SAC && backpackManager.isBackpack(currentItem)) {
+                player.getInventory().addItem(currentItem);
+                gui.setItem(SLOT_SAC, itemManager.forgeSlotSacItem());
+
+            } else if (slot == SLOT_RUNE && (
+                    currentItem.isSimilar(itemManager.craftUpgradeItem()) ||
+                            currentItem.isSimilar(itemManager.enderChestUpgradeItem()))) {
+                player.getInventory().addItem(currentItem);
+                gui.setItem(SLOT_RUNE, itemManager.forgeSlotRuneItem());
+
+            } else if (slot == SLOT_CONFIRM) {
+                handleConfirm(player, gui, itemManager, backpackManager);
+                return;
+            }
         }
 
         Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
             ItemStack sacItem = gui.getItem(SLOT_SAC);
             ItemStack runeItem = gui.getItem(SLOT_RUNE);
 
-            if(manager.isBackpack(sacItem) && (
-                    runeItem != null && (
-                            runeItem.isSimilar(manager.craftUpgradeItem()) ||
-                                    runeItem.isSimilar(manager.enderChestUpgradeItem())
-                    )
-            )) {
-                gui.setItem(SLOT_CONFIRM, forge.forgeConfirmItem());
-            } else {
-                gui.setItem(SLOT_CONFIRM, forge.forgeResultLockedItem());
-            }
+            boolean sacOk = backpackManager.isBackpack(sacItem);
+            boolean runeOk = runeItem != null && (
+                    runeItem.isSimilar(itemManager.craftUpgradeItem()) ||
+                            runeItem.isSimilar(itemManager.enderChestUpgradeItem())
+            );
+
+            gui.setItem(SLOT_CONFIRM, sacOk && runeOk
+                    ? itemManager.forgeConfirmItem()
+                    : itemManager.forgeResultLockedItem());
         }, 1L);
+    }
 
-        if(slot == SLOT_CONFIRM) {
-            ItemStack sacItem = gui.getItem(SLOT_SAC);
-            ItemStack runeItem = gui.getItem(SLOT_RUNE);
+    private void handleConfirm(Player player, @NonNull Inventory gui, ItemManager itemManager, @NonNull BackpackManager backpackManager) {
+        ItemStack sacItem = gui.getItem(SLOT_SAC);
+        ItemStack runeItem = gui.getItem(SLOT_RUNE);
 
-            if(!manager.isBackpack(sacItem) || runeItem == null) return;
+        if (!backpackManager.isBackpack(sacItem) || runeItem == null) return;
 
-            if(runeItem.isSimilar(manager.craftUpgradeItem())) {
-                if(manager.hasCraftUnlock(sacItem)){
-                    player.sendMessage("§cCe sac possède déjà la §e§lRune de Craft§c !");
-                    return;
-                }
-                manager.applyCraftRune(sacItem);
-                gui.setItem(SLOT_RUNE, forge.forgeSlotRuneItem());
-                gui.setItem(SLOT_SAC, forge.forgeSlotSacItem());
-                assert sacItem != null;
-                player.getInventory().addItem(sacItem);
-                player.sendMessage("§a§lRune de Craft appliquée avec succès !");
-
-            } else if(runeItem.isSimilar(manager.enderChestUpgradeItem())) {
-                if(manager.hasEnderUnlock(sacItem)){
-                    player.sendMessage("§cCe sac possède déjà la §5§lRune d'Ender§c !");
-                    return;
-                }
-                manager.applyEnderRune(sacItem);
-                gui.setItem(SLOT_RUNE, forge.forgeSlotRuneItem());
-                gui.setItem(SLOT_SAC, forge.forgeSlotSacItem());
-                player.getInventory().addItem(sacItem);
-                player.sendMessage("§5§lRune d'Ender appliquée avec succès !");
+        if (runeItem.isSimilar(itemManager.craftUpgradeItem())) {
+            if (backpackManager.hasCraftUnlock(sacItem)) {
+                player.sendMessage("§cCe sac possède déjà la §e§lRune de Craft§c !");
+                return;
             }
+            backpackManager.applyCraftRune(sacItem);
+            player.sendMessage("§a§lRune de Craft appliquée avec succès !");
 
-            gui.setItem(SLOT_CONFIRM, forge.forgeResultLockedItem());
+        } else if (runeItem.isSimilar(itemManager.enderChestUpgradeItem())) {
+            if (backpackManager.hasEnderUnlock(sacItem)) {
+                player.sendMessage("§cCe sac possède déjà la §5§lRune d'Ender§c !");
+                return;
+            }
+            backpackManager.applyEnderRune(sacItem);
+            player.sendMessage("§5§lRune d'Ender appliquée avec succès !");
+
+        } else {
+            return;
         }
+
+        player.getInventory().addItem(sacItem);
+        gui.setItem(SLOT_SAC, itemManager.forgeSlotSacItem());
+        gui.setItem(SLOT_RUNE, itemManager.forgeSlotRuneItem());
+        gui.setItem(SLOT_CONFIRM, itemManager.forgeResultLockedItem());
     }
 
     @EventHandler
@@ -152,14 +188,15 @@ public class ForgeListener implements Listener {
         ItemStack runeItem = gui.getItem(SLOT_RUNE);
 
         BackpackManager backpackManager = Main.getInstance().getBackpackManager();
+        ItemManager itemManager = Main.getInstance().getItemManager();
         if(sacItem != null && backpackManager.isBackpack(sacItem)) {
             player.getWorld().dropItemNaturally(player.getLocation(), sacItem);
             gui.setItem(SLOT_SAC, null);
         }
 
         if(runeItem != null && !runeItem.getType().isAir() && (
-                runeItem.isSimilar(backpackManager.craftUpgradeItem()) ||
-                        runeItem.isSimilar(backpackManager.enderChestUpgradeItem())
+                runeItem.isSimilar(itemManager.craftUpgradeItem()) ||
+                        runeItem.isSimilar(itemManager.enderChestUpgradeItem())
         )) {
             player.getWorld().dropItemNaturally(player.getLocation(), runeItem);
             gui.setItem(SLOT_RUNE, null);

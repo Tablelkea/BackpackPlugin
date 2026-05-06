@@ -10,10 +10,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class PlayerGuiEvent implements Listener {
+public class BackpackListener implements Listener {
 
     @EventHandler
-    public void playerGUI(@NonNull InventoryClickEvent e) {
+    public void onGuiClick(@NonNull InventoryClickEvent e) {
         if(!(e.getWhoClicked() instanceof Player player)) return;
         Inventory gui = e.getClickedInventory();
         BackpackManager manager = Main.getInstance().getBackpackManager();

@@ -2,6 +2,7 @@ package fr.kilian.backpackV2;
 
 import fr.kilian.backpackV2.managers.BackpackManager;
 import fr.kilian.backpackV2.managers.ForgeManager;
+import fr.kilian.backpackV2.managers.ItemManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -26,14 +27,16 @@ public class DebugCommand implements CommandExecutor {
                 try {
                     BackpackManager backpackManager = Main.getInstance().getBackpackManager();
                     ForgeManager forgeManager = Main.getInstance().getForgeManager();
+                    ItemManager itemManager = Main.getInstance().getItemManager();
+
                     PlayerInventory playerInventory = player.getInventory();
 
-                    playerInventory.addItem(backpackManager.backpackItem(1));
-                    playerInventory.addItem(backpackManager.backpackItem(2));
-                    playerInventory.addItem(backpackManager.backpackItem(3));
-                    playerInventory.addItem(forgeManager.forgeItem());
-                    playerInventory.addItem(backpackManager.craftUpgradeItem());
-                    playerInventory.addItem(backpackManager.enderChestUpgradeItem());
+                    playerInventory.addItem(itemManager.backpackItem(1));
+                    playerInventory.addItem(itemManager.backpackItem(2));
+                    playerInventory.addItem(itemManager.backpackItem(3));
+                    playerInventory.addItem(itemManager.forgeItem());
+                    playerInventory.addItem(itemManager.craftUpgradeItem());
+                    playerInventory.addItem(itemManager.enderChestUpgradeItem());
 
                 } catch (MalformedURLException e) {
                     throw new RuntimeException(e);
