@@ -1,0 +1,11 @@
+name: BackpackV2
+version: '1.0'
+main: fr.kilian.backpackV2.Main
+api-version: '1.21'
+commands:
+  debug:
+    description: debug the plugin
+    permission: op
+  nbt:
+    description: show all the nbt of the held item
+    permission: op
