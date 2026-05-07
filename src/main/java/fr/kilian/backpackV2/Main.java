@@ -36,7 +36,7 @@ public final class Main extends JavaPlugin {
         itemManager = new ItemManager();
 
         registerCommand("debug", new DebugCommand());
-        registerCommand("debug", new NBTCommand());
+        registerCommand("nbt", new NBTCommand());
 
         PluginManager pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new BackpackListener(), this);
