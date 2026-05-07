@@ -53,40 +53,69 @@ public class BackpackManager implements Listener {
         meta.lore(lore);
     }
 
-    public void applyCraftRune(ItemStack backpack) {
+    public void applyCraftRune(ItemStack backpack, Player player) {
         if (!isBackpack(backpack)) return;
         backpack.editMeta(meta -> {
             meta.getPersistentDataContainer().set(craftUpgrade, PersistentDataType.BOOLEAN, true);
             addRuneLore(meta, "Rune de Craft");
         });
+        player.sendMessage("§a§lRune de Craft appliquée avec succès !");
+    }
+
+    public boolean hasCraftUnlock(ItemStack backpack, Player player) {
+        if(backpack == null || backpack.getItemMeta() == null) return false;
+        PersistentDataContainer pdc = backpack.getItemMeta().getPersistentDataContainer();
+        boolean value = pdc.has(craftUpgrade, PersistentDataType.BOOLEAN);
+        if(value) player.sendMessage("§cCe sac possède déjà la §e§lRune de Craft§c !");
+        return value;
     }
 
     public boolean hasCraftUnlock(ItemStack backpack) {
         if(backpack == null || backpack.getItemMeta() == null) return false;
-        Boolean value = backpack.getItemMeta().getPersistentDataContainer().get(craftUpgrade, PersistentDataType.BOOLEAN);
-        return value != null && value;
+        PersistentDataContainer pdc = backpack.getItemMeta().getPersistentDataContainer();
+        return pdc.has(craftUpgrade, PersistentDataType.BOOLEAN);
     }
 
-    public void applyEnderRune(ItemStack backpack) {
+    public void applyEnderRune(ItemStack backpack, Player player) {
         if (!isBackpack(backpack)) return;
         backpack.editMeta(meta -> {
             meta.getPersistentDataContainer().set(enderchestUpgrade, PersistentDataType.BOOLEAN, true);
             addRuneLore(meta, "Rune d'Ender");
         });
+        player.sendMessage("§5§lRune d'Ender appliquée avec succès !");
+    }
+
+    public boolean hasEnderUnlock(ItemStack backpack, Player player) {
+        if(backpack == null || backpack.getItemMeta() == null) return false;
+        PersistentDataContainer pdc = backpack.getItemMeta().getPersistentDataContainer();
+        boolean value = pdc.has(enderchestUpgrade, PersistentDataType.BOOLEAN);
+        if (value) player.sendMessage("§cCe sac possède déjà la §5§lRune d'Ender§c !");
+
+        return value;
     }
 
     public boolean hasEnderUnlock(ItemStack backpack) {
         if(backpack == null || backpack.getItemMeta() == null) return false;
-        Boolean value = backpack.getItemMeta().getPersistentDataContainer().get(enderchestUpgrade, PersistentDataType.BOOLEAN);
-        return value != null && value;
+        PersistentDataContainer pdc = backpack.getItemMeta().getPersistentDataContainer();
+
+        return pdc.has(enderchestUpgrade, PersistentDataType.BOOLEAN);
     }
 
-    public void applySoulRune(ItemStack backpack) {
+    public void applySoulRune(ItemStack backpack, Player player) {
         if (!isBackpack(backpack)) return;
         backpack.editMeta(meta -> {
             meta.getPersistentDataContainer().set(soulUpgrage, PersistentDataType.BOOLEAN, true);
             addRuneLore(meta, "Rune d'Âme");
         });
+        player.sendMessage("§6§lRune d'Âme appliquée avec succès !");
+    }
+
+    public boolean hasSoulUnlock(ItemStack backpack, Player player) {
+        if (backpack == null || !backpack.hasItemMeta()) return false;
+        PersistentDataContainer pdc = backpack.getItemMeta().getPersistentDataContainer();
+        boolean value = pdc.has(soulUpgrage, PersistentDataType.BOOLEAN);
+        if(value) player.sendMessage("§cCe sac possède déjà la §e§lRune d'Âme§c !");
+        return value;
     }
 
     public boolean hasSoulUnlock(ItemStack backpack) {

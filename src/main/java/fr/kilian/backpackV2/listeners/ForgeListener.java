@@ -25,8 +25,6 @@ public class ForgeListener implements Listener {
     private static final int SLOT_RUNE = 15;
     private static final int SLOT_CONFIRM = 13;
 
-    private Inventory forgeGUI;
-
     @EventHandler
     public void onPlace(@NonNull BlockPlaceEvent e) {
         ForgeManager forge = Main.getInstance().getForgeManager();
@@ -59,7 +57,7 @@ public class ForgeListener implements Listener {
         e.setCancelled(true);
         Player player = e.getPlayer();
 
-        forgeGUI = Bukkit.createInventory(null, 27, Component.text("§6§l✦ Forge de Sac ✦"));
+        Inventory forgeGUI = Bukkit.createInventory(null, 27, Component.text("§6§l✦ Forge de Sac ✦"));
 
         for(int i = 0; i < 27; i++) forgeGUI.setItem(i, itemManager.voidItem());
 
@@ -73,7 +71,8 @@ public class ForgeListener implements Listener {
     @EventHandler
     public void onGuiClick(@NonNull InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player player)) return;
-        if (e.getClickedInventory() != forgeGUI) return;
+
+        if (!e.getView().title().equals(Component.text("§6§l✦ Forge de Sac ✦"))) return;
 
         BackpackManager backpackManager = Main.getInstance().getBackpackManager();
         ItemManager itemManager = Main.getInstance().getItemManager();
@@ -100,8 +99,7 @@ public class ForgeListener implements Listener {
                 player.getInventory().setItem(slot, null);
                 gui.setItem(SLOT_SAC, currentItem);
 
-            } else if (currentItem.isSimilar(itemManager.craftUpgradeItem()) ||
-                    currentItem.isSimilar(itemManager.enderChestUpgradeItem())) {
+            } else if (itemManager.isRune(currentItem)) {
 
                 ItemStack previousRune = gui.getItem(SLOT_RUNE);
 
@@ -120,9 +118,7 @@ public class ForgeListener implements Listener {
                 player.getInventory().addItem(currentItem);
                 gui.setItem(SLOT_SAC, itemManager.forgeSlotSacItem());
 
-            } else if (slot == SLOT_RUNE && (
-                    currentItem.isSimilar(itemManager.craftUpgradeItem()) ||
-                            currentItem.isSimilar(itemManager.enderChestUpgradeItem()))) {
+            } else if (slot == SLOT_RUNE && itemManager.isRune(currentItem)) {
                 player.getInventory().addItem(currentItem);
                 gui.setItem(SLOT_RUNE, itemManager.forgeSlotRuneItem());
 
@@ -137,10 +133,7 @@ public class ForgeListener implements Listener {
             ItemStack runeItem = gui.getItem(SLOT_RUNE);
 
             boolean sacOk = backpackManager.isBackpack(sacItem);
-            boolean runeOk = runeItem != null && (
-                    runeItem.isSimilar(itemManager.craftUpgradeItem()) ||
-                            runeItem.isSimilar(itemManager.enderChestUpgradeItem())
-            );
+            boolean runeOk = runeItem != null && itemManager.isRune(currentItem);
 
             gui.setItem(SLOT_CONFIRM, sacOk && runeOk
                     ? itemManager.forgeConfirmItem()
@@ -155,28 +148,16 @@ public class ForgeListener implements Listener {
         if (!backpackManager.isBackpack(sacItem) || runeItem == null) return;
 
         if (runeItem.isSimilar(itemManager.craftUpgradeItem())) {
-            if (backpackManager.hasCraftUnlock(sacItem)) {
-                player.sendMessage("§cCe sac possède déjà la §e§lRune de Craft§c !");
-                return;
-            }
-            backpackManager.applyCraftRune(sacItem);
-            player.sendMessage("§a§lRune de Craft appliquée avec succès !");
+            if (backpackManager.hasCraftUnlock(sacItem, player)) return;
+            backpackManager.applyCraftRune(sacItem, player);
 
         } else if (runeItem.isSimilar(itemManager.enderChestUpgradeItem())) {
-            if (backpackManager.hasEnderUnlock(sacItem)) {
-                player.sendMessage("§cCe sac possède déjà la §5§lRune d'Ender§c !");
-                return;
-            }
-            backpackManager.applyEnderRune(sacItem);
-            player.sendMessage("§5§lRune d'Ender appliquée avec succès !");
+            if (backpackManager.hasEnderUnlock(sacItem, player)) return;
+            backpackManager.applyEnderRune(sacItem, player);
 
         } else if (runeItem.isSimilar(itemManager.soulUpgradeItem())) {
-            if (backpackManager.hasSoulUnlock(sacItem)) {
-                player.sendMessage("§cCe sac possède déjà la §e§lRune d'Âme§c !");
-                return;
-            }
-            backpackManager.applySoulRune(sacItem);
-            player.sendMessage("§6§lRune d'Âme appliquée avec succès !");
+            if (backpackManager.hasSoulUnlock(sacItem, player)) return;
+            backpackManager.applySoulRune(sacItem, player);
         }else {
             return;
         }
@@ -191,7 +172,7 @@ public class ForgeListener implements Listener {
 
     @EventHandler
     public void onForgeClose(@NonNull InventoryCloseEvent e) {
-        if(e.getInventory() != forgeGUI) return;
+        if (!e.getView().title().equals(Component.text("§6§l✦ Forge de Sac ✦"))) return;
 
         Inventory gui = e.getInventory();
         Player player = (Player) e.getPlayer();
@@ -206,10 +187,7 @@ public class ForgeListener implements Listener {
             gui.setItem(SLOT_SAC, null);
         }
 
-        if(runeItem != null && !runeItem.getType().isAir() && (
-                runeItem.isSimilar(itemManager.craftUpgradeItem()) ||
-                        runeItem.isSimilar(itemManager.enderChestUpgradeItem())
-        )) {
+        if(runeItem != null && !runeItem.getType().isAir() && itemManager.isRune(runeItem)) {
             player.getWorld().dropItemNaturally(player.getLocation(), runeItem);
             gui.setItem(SLOT_RUNE, null);
         }

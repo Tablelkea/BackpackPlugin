@@ -9,13 +9,17 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 public class ItemManager {
 
     public NamespacedKey backpackIdKey = Main.getInstance().registerNBT("backpack-id");
     public NamespacedKey backpackLevelKey = Main.getInstance().registerNBT("backpack-level");
+
+    public List<ItemStack> runes = new ArrayList<>();
 
     private static final String SEP = "§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬";
 
@@ -45,7 +49,7 @@ public class ItemManager {
     // ───── Runes ─────
 
     public ItemStack craftUpgradeItem() {
-        return buildItem(Material.NAUTILUS_SHELL, "§e§l✦ §6§lRune de Craft §e§l✦", ItemRarity.EPIC,
+        ItemStack buildItem = buildItem(Material.NAUTILUS_SHELL, "§e§l✦ §6§lRune de Craft §e§l✦", ItemRarity.EPIC,
                 SEP,
                 "§7Appliquez cette rune sur votre",
                 "§fsac à dos §7pour débloquer",
@@ -53,10 +57,12 @@ public class ItemManager {
                 SEP,
                 "§e§l» §6Clic droit sur le sac pour appliquer"
         );
+        runes.add(buildItem);
+        return buildItem;
     }
 
     public ItemStack enderChestUpgradeItem() {
-        return buildItem(Material.ENDER_EYE, "§5§l✦ §d§lRune d'Ender §5§l✦", ItemRarity.EPIC,
+        ItemStack enderchestItem = buildItem(Material.ENDER_EYE, "§5§l✦ §d§lRune d'Ender §5§l✦", ItemRarity.EPIC,
                 SEP,
                 "§7Appliquez cette rune sur votre",
                 "§fsac à dos §7pour débloquer",
@@ -64,10 +70,12 @@ public class ItemManager {
                 SEP,
                 "§5§l» §dClic droit sur le sac pour appliquer"
         );
+        runes.add(enderchestItem);
+        return enderchestItem;
     }
 
     public ItemStack soulUpgradeItem() {
-        return buildItem(Material.TOTEM_OF_UNDYING, "§6§l✦ §e§lRune d'Âme §6§l✦", ItemRarity.EPIC,
+        ItemStack soulItem = buildItem(Material.TOTEM_OF_UNDYING, "§6§l✦ §e§lRune d'Âme §6§l✦", ItemRarity.EPIC,
                 SEP,
                 "§7Appliquez cette rune sur votre",
                 "§fsac à dos §7pour le protéger",
@@ -75,6 +83,8 @@ public class ItemManager {
                 SEP,
                 "§6§l» §eClic droit sur le sac pour appliquer"
         );
+        runes.add(soulItem);
+        return soulItem;
     }
 
     // ───── Sac à dos ─────
@@ -180,4 +190,16 @@ public class ItemManager {
         );
         return item;
     }
+
+    public boolean isRune(ItemStack item) {
+        if (item == null || item.getType().isAir()) return false;
+        for(ItemStack rune : runes){
+            if(rune.isSimilar(item)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 }

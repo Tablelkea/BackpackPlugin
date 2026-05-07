@@ -40,7 +40,7 @@ public class BackpackListener implements Listener {
         }
 
         if(slot == size - 7){
-            if(manager.hasEnderUnlock(itemInHand)){
+            if(manager.hasEnderUnlock(itemInHand, player)){
                 player.openInventory(player.getEnderChest());
             } else {
                 player.sendMessage("§cVous n'avez pas la §5§lRune d'Ender§c sur ce sac !");

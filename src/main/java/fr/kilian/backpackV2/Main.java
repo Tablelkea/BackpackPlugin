@@ -1,5 +1,6 @@
 package fr.kilian.backpackV2;
 
+import fr.kilian.backpackV2.listeners.BackpackDeathListener;
 import fr.kilian.backpackV2.listeners.BackpackListener;
 import fr.kilian.backpackV2.listeners.ForgeListener;
 import fr.kilian.backpackV2.listeners.PlayerInteractListener;
@@ -43,6 +44,7 @@ public final class Main extends JavaPlugin {
         pluginManager.registerEvents(new PlayerInteractListener(), this);
         pluginManager.registerEvents(new BackpackManager(), this);
         pluginManager.registerEvents(new ForgeListener(), this);
+        pluginManager.registerEvents(new BackpackDeathListener(), this);
 
         try {
             craftManager.initBackpackCraft();
