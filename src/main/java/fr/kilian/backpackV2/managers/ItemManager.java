@@ -6,12 +6,10 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.net.MalformedURLException;
-import java.util.List;
+import java.util.Arrays;
 import java.util.UUID;
 
 public class ItemManager {
@@ -19,169 +17,167 @@ public class ItemManager {
     public NamespacedKey backpackIdKey = Main.getInstance().registerNBT("backpack-id");
     public NamespacedKey backpackLevelKey = Main.getInstance().registerNBT("backpack-level");
 
-    public ItemStack craftUpgradeItem(){
-        ItemStack upgrade = new ItemStack(Material.NAUTILUS_SHELL);
-        ItemMeta upgradeMeta = upgrade.getItemMeta();
-        upgradeMeta.displayName(Component.text("§e§l✦ §6§lRune de Craft §e§l✦"));
-        upgradeMeta.lore(List.of(
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§7Appliquez cette rune sur votre"),
-                Component.text("§fsac à dos §7pour débloquer"),
-                Component.text("§fl'accès à une table de craft."),
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§e§l» §6Clic droit sur le sac pour appliquer")
-        ));
-        upgradeMeta.setRarity(ItemRarity.EPIC);
-        upgradeMeta.setMaxStackSize(1);
-        upgrade.setItemMeta(upgradeMeta);
-        return upgrade;
+    private static final String SEP = "§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬";
+
+    // ───── Builder générique ─────
+
+    public ItemStack buildItem(Material material, String name, ItemRarity rarity, String... loreLines) {
+        ItemStack item = new ItemStack(material);
+        item.editMeta(meta -> {
+            meta.displayName(Component.text(name));
+            meta.setRarity(rarity);
+            meta.setMaxStackSize(1);
+            meta.lore(Arrays.stream(loreLines).map(Component::text).toList());
+        });
+        return item;
     }
 
-    public ItemStack enderChestUpgradeItem(){
-        ItemStack upgrade = new ItemStack(Material.ENDER_EYE);
-        ItemMeta upgradeMeta = upgrade.getItemMeta();
-        upgradeMeta.displayName(Component.text("§5§l✦ §d§lRune d'Ender §5§l✦"));
-        upgradeMeta.lore(List.of(
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§7Appliquez cette rune sur votre"),
-                Component.text("§fsac à dos §7pour débloquer"),
-                Component.text("§fl'accès à votre EnderChest."),
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§5§l» §dClic droit sur le sac pour appliquer")
-        ));
-        upgradeMeta.setRarity(ItemRarity.EPIC);
-        upgradeMeta.setMaxStackSize(1);
-        upgrade.setItemMeta(upgradeMeta);
-        return upgrade;
+    public ItemStack buildGuiItem(Material material, String name, String... loreLines) {
+        ItemStack item = new ItemStack(material);
+        item.editMeta(meta -> {
+            meta.displayName(Component.text(name));
+            if (loreLines.length > 0)
+                meta.lore(Arrays.stream(loreLines).map(Component::text).toList());
+        });
+        return item;
     }
 
-    public ItemStack backpackItem(int level) throws MalformedURLException {
-        ItemStack it = new ItemStack(Material.PLAYER_HEAD);
-        if(it.getItemMeta() == null) return null;
-        SkullMeta itm = (SkullMeta) it.getItemMeta();
+    // ───── Runes ─────
+
+    public ItemStack craftUpgradeItem() {
+        return buildItem(Material.NAUTILUS_SHELL, "§e§l✦ §6§lRune de Craft §e§l✦", ItemRarity.EPIC,
+                SEP,
+                "§7Appliquez cette rune sur votre",
+                "§fsac à dos §7pour débloquer",
+                "§fl'accès à une table de craft.",
+                SEP,
+                "§e§l» §6Clic droit sur le sac pour appliquer"
+        );
+    }
+
+    public ItemStack enderChestUpgradeItem() {
+        return buildItem(Material.ENDER_EYE, "§5§l✦ §d§lRune d'Ender §5§l✦", ItemRarity.EPIC,
+                SEP,
+                "§7Appliquez cette rune sur votre",
+                "§fsac à dos §7pour débloquer",
+                "§fl'accès à votre EnderChest.",
+                SEP,
+                "§5§l» §dClic droit sur le sac pour appliquer"
+        );
+    }
+
+    public ItemStack soulUpgradeItem() {
+        return buildItem(Material.TOTEM_OF_UNDYING, "§6§l✦ §e§lRune d'Âme §6§l✦", ItemRarity.EPIC,
+                SEP,
+                "§7Appliquez cette rune sur votre",
+                "§fsac à dos §7pour le protéger",
+                "§fcontre la mort.",
+                SEP,
+                "§6§l» §eClic droit sur le sac pour appliquer"
+        );
+    }
+
+    // ───── Sac à dos ─────
+
+    public ItemStack backpackItem(int level){
+        String[] textures = {
+                "http://textures.minecraft.net/texture/cc1b2f592cfc8d372dcf5fd44eed69dddc64601d7846d72619f70511d8043a89",
+                "http://textures.minecraft.net/texture/8e4ebefefa8cb3c5860ac8412659e123ba154d4b7096c3b123c0d1fca63c9799",
+                "http://textures.minecraft.net/texture/d4675158c0767ee508c52d52426cef3a2c2b29b7e487c92953a3823f561d06af"
+        };
+
+        ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) item.getItemMeta();
+        if (meta == null) return null;
+
         BackpackManager backpackManager = Main.getInstance().getBackpackManager();
+        meta.setPlayerProfile(backpackManager.createPlayerProfile(textures[level - 1], "backpack-level" + level));
 
-        if(level == 1) {
-            itm.setOwnerProfile(backpackManager.createPlayerProfile("http://textures.minecraft.net/texture/cc1b2f592cfc8d372dcf5fd44eed69dddc64601d7846d72619f70511d8043a89", "backpack-level1"));
-        } else if(level == 2)
-            itm.setOwnerProfile(backpackManager.createPlayerProfile("http://textures.minecraft.net/texture/8e4ebefefa8cb3c5860ac8412659e123ba154d4b7096c3b123c0d1fca63c9799", "backpack-level2"));
-        else
-            itm.setOwnerProfile(backpackManager.createPlayerProfile("http://textures.minecraft.net/texture/d4675158c0767ee508c52d52426cef3a2c2b29b7e487c92953a3823f561d06af", "backpack-level3"));
+        meta.displayName(Component.text("§6§l✦ Sac à Dos - Niveau " + level + " §6§l✦"));
+        meta.lore(Arrays.stream(new String[]{
+                SEP,
+                "§7Accédez à votre §fsac à dos",
+                "§7personnel depuis §fn'importe où.",
+                SEP,
+                "§6§l» §eCliquez pour ouvrir"
+        }).map(Component::text).toList());
+        meta.setRarity(ItemRarity.EPIC);
+        meta.setMaxStackSize(1);
+        meta.getPersistentDataContainer().set(backpackIdKey, PersistentDataType.STRING, UUID.randomUUID().toString());
+        meta.getPersistentDataContainer().set(backpackLevelKey, PersistentDataType.INTEGER, level);
 
-        itm.displayName(Component.text("§6§l✦ Sac à Dos - Niveau " + level + " §6§l✦"));
-        itm.lore(List.of(
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§7Accédez à votre §fsac à dos"),
-                Component.text("§7personnel depuis §fn'importe où."),
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§6§l» §eCliquez pour ouvrir")
-        ));
-        itm.setRarity(ItemRarity.EPIC);
-        itm.setMaxStackSize(1);
-
-        itm.getPersistentDataContainer().set(backpackIdKey, PersistentDataType.STRING, UUID.randomUUID().toString());
-        itm.getPersistentDataContainer().set(backpackLevelKey, PersistentDataType.INTEGER, level);
-
-        it.setItemMeta(itm);
-        return it;
+        item.setItemMeta(meta);
+        return item;
     }
 
-    public ItemStack workbenchIcon(){
-        ItemStack workbench = new ItemStack(Material.CRAFTING_TABLE);
-        ItemMeta workbenchMeta = workbench.getItemMeta();
-        workbenchMeta.displayName(Component.text("§6§l✦ §e§lTable de Craft §6§l✦"));
-        workbenchMeta.lore(List.of(
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§7Accédez à un §fcrafteur complet"),
-                Component.text("§7depuis §fn'importe où§7 dans le monde."),
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§e§l» §eCliquez pour ouvrir")
-        ));
-        workbench.setItemMeta(workbenchMeta);
-        return workbench;
+    // ───── Icônes sac ─────
+
+    public ItemStack workbenchIcon() {
+        return buildItem(Material.CRAFTING_TABLE, "§6§l✦ §e§lTable de Craft §6§l✦", ItemRarity.COMMON,
+                SEP,
+                "§7Accédez à un §fcrafteur complet",
+                "§7depuis §fn'importe où§7 dans le monde.",
+                SEP,
+                "§e§l» §eCliquez pour ouvrir"
+        );
     }
 
-    public ItemStack enderChestIcon(){
-        ItemStack enderChest = new ItemStack(Material.ENDER_CHEST);
-        ItemMeta enderChestMeta = enderChest.getItemMeta();
-        enderChestMeta.displayName(Component.text("§5§l✦ §d§lEnder Chest §5§l✦"));
-        enderChestMeta.lore(List.of(
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§7Accédez à votre §fstockage personnel"),
-                Component.text("§7depuis §fn'importe où§7 dans le monde."),
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§5§l» §dCliquez pour ouvrir")
-        ));
-        enderChest.setItemMeta(enderChestMeta);
-        return enderChest;
+    public ItemStack enderChestIcon() {
+        return buildItem(Material.ENDER_CHEST, "§5§l✦ §d§lEnder Chest §5§l✦", ItemRarity.COMMON,
+                SEP,
+                "§7Accédez à votre §fstockage personnel",
+                "§7depuis §fn'importe où§7 dans le monde.",
+                SEP,
+                "§5§l» §dCliquez pour ouvrir"
+        );
     }
 
-    public ItemStack voidItem(){
-        ItemStack voidit = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta voiditm = voidit.getItemMeta();
-        voiditm.setHideTooltip(true);
-        voidit.setItemMeta(voiditm);
-        return voidit;
+    // ───── Items GUI Forge ─────
+
+    public ItemStack voidItem() {
+        ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        item.editMeta(meta -> meta.setHideTooltip(true));
+        return item;
     }
 
     public ItemStack forgeSlotSacItem() {
-        ItemStack slot = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta slotMeta = slot.getItemMeta();
-        slotMeta.displayName(Component.text("§7Placez votre §fsac à dos"));
-        slot.setItemMeta(slotMeta);
-        return slot;
+        return buildGuiItem(Material.GRAY_STAINED_GLASS_PANE, "§7Placez votre §fsac à dos");
     }
 
     public ItemStack forgeSlotRuneItem() {
-        ItemStack slot = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta slotMeta = slot.getItemMeta();
-        slotMeta.displayName(Component.text("§7Placez votre §frune"));
-        slot.setItemMeta(slotMeta);
-        return slot;
+        return buildGuiItem(Material.GRAY_STAINED_GLASS_PANE, "§7Placez votre §frune");
     }
 
     public ItemStack forgeResultLockedItem() {
-        ItemStack locked = new ItemStack(Material.RED_STAINED_GLASS_PANE);
-        ItemMeta lockedMeta = locked.getItemMeta();
-        lockedMeta.displayName(Component.text("§cPlacez un sac et une rune"));
-        locked.setItemMeta(lockedMeta);
-        return locked;
+        return buildGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPlacez un sac et une rune");
     }
 
     public ItemStack forgeConfirmItem() {
-        ItemStack confirm = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
-        ItemMeta confirmMeta = confirm.getItemMeta();
-        confirmMeta.displayName(Component.text("§a§l✦ Appliquer la rune §a§l✦"));
-        confirmMeta.lore(List.of(
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§7Cliquez pour appliquer"),
-                Component.text("§7la rune sur le sac."),
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§a§l» §2Cliquez pour confirmer")
-        ));
-        confirm.setItemMeta(confirmMeta);
-        return confirm;
+        return buildGuiItem(Material.LIME_STAINED_GLASS_PANE, "§a§l✦ Appliquer la rune §a§l✦",
+                SEP,
+                "§7Cliquez pour appliquer",
+                "§7la rune sur le sac.",
+                SEP,
+                "§a§l» §2Cliquez pour confirmer"
+        );
     }
+
+    // ───── Forge ─────
 
     public ItemStack forgeItem() {
-
         ForgeManager forgeManager = Main.getInstance().getForgeManager();
 
-        ItemStack forge = new ItemStack(Material.SMITHING_TABLE);
-        ItemMeta forgeMeta = forge.getItemMeta();
-        forgeMeta.displayName(Component.text("§6§l✦ §e§lForge de Sac §6§l✦"));
-        forgeMeta.lore(List.of(
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§7Placez ce bloc pour accéder"),
-                Component.text("§7à la §fforge§7 et appliquer"),
-                Component.text("§7des §frunes§7 sur vos sacs."),
-                Component.text("§8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"),
-                Component.text("§e§l» §6Placez pour activer")
-        ));
-        forgeMeta.setRarity(ItemRarity.EPIC);
-        forgeMeta.getPersistentDataContainer().set(forgeManager.forgeIdKey, PersistentDataType.BOOLEAN, true);
-        forge.setItemMeta(forgeMeta);
-        return forge;
+        ItemStack item = buildItem(Material.SMITHING_TABLE, "§6§l✦ §e§lForge de Sac §6§l✦", ItemRarity.EPIC,
+                SEP,
+                "§7Placez ce bloc pour accéder",
+                "§7à la §fforge§7 et appliquer",
+                "§7des §frunes§7 sur vos sacs.",
+                SEP,
+                "§e§l» §6Placez pour activer"
+        );
+        item.editMeta(meta ->
+                meta.getPersistentDataContainer().set(forgeManager.forgeIdKey, PersistentDataType.BOOLEAN, true)
+        );
+        return item;
     }
-
 }

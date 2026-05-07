@@ -2,8 +2,6 @@ package fr.kilian.backpackV2.listeners;
 
 import fr.kilian.backpackV2.Main;
 import fr.kilian.backpackV2.managers.BackpackManager;
-import fr.kilian.backpackV2.managers.CraftManager;
-import fr.kilian.backpackV2.managers.ForgeManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -29,17 +27,8 @@ public class PlayerInteractListener implements Listener {
     }
 
     @EventHandler
-    public void playerJoin(@NonNull PlayerJoinEvent e){
-        Player player = e.getPlayer();
-
-        ForgeManager forgeManager = Main.getInstance().getForgeManager();
-        CraftManager craftManager = Main.getInstance().getCraftManager();
-
-        player.discoverRecipe(craftManager.backpackCraft1);
-        player.discoverRecipe(craftManager.backpackCraft2);
-        player.discoverRecipe(craftManager.backpackCraft3);
-        player.discoverRecipe(forgeManager.forgeCraftKey);
-        player.discoverRecipe(craftManager.craftRuneCraftKey);
-        player.discoverRecipe(craftManager.enderRuneCraftKey);
+    public void playerJoin(@NonNull PlayerJoinEvent e) {
+        Main.getInstance().getCraftManager().getAllRecipeKeys
+                .forEach(e.getPlayer()::discoverRecipe);
     }
 }

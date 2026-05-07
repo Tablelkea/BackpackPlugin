@@ -4,6 +4,7 @@ import fr.kilian.backpackV2.Main;
 import fr.kilian.backpackV2.managers.BackpackManager;
 import fr.kilian.backpackV2.managers.ForgeManager;
 import fr.kilian.backpackV2.managers.ItemManager;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,6 +24,8 @@ public class ForgeListener implements Listener {
     private static final int SLOT_SAC = 11;
     private static final int SLOT_RUNE = 15;
     private static final int SLOT_CONFIRM = 13;
+
+    private Inventory forgeGUI;
 
     @EventHandler
     public void onPlace(@NonNull BlockPlaceEvent e) {
@@ -56,21 +59,21 @@ public class ForgeListener implements Listener {
         e.setCancelled(true);
         Player player = e.getPlayer();
 
-        Inventory gui = Bukkit.createInventory(null, 27, "§6§l✦ Forge de Sac ✦");
+        forgeGUI = Bukkit.createInventory(null, 27, Component.text("§6§l✦ Forge de Sac ✦"));
 
-        for(int i = 0; i < 27; i++) gui.setItem(i, itemManager.voidItem());
+        for(int i = 0; i < 27; i++) forgeGUI.setItem(i, itemManager.voidItem());
 
-        gui.setItem(SLOT_SAC, itemManager.forgeSlotSacItem());
-        gui.setItem(SLOT_RUNE, itemManager.forgeSlotRuneItem());
-        gui.setItem(SLOT_CONFIRM, itemManager.forgeResultLockedItem());
+        forgeGUI.setItem(SLOT_SAC, itemManager.forgeSlotSacItem());
+        forgeGUI.setItem(SLOT_RUNE, itemManager.forgeSlotRuneItem());
+        forgeGUI.setItem(SLOT_CONFIRM, itemManager.forgeResultLockedItem());
 
-        player.openInventory(gui);
+        player.openInventory(forgeGUI);
     }
 
     @EventHandler
     public void onGuiClick(@NonNull InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player player)) return;
-        if (!e.getView().getTitle().equals("§6§l✦ Forge de Sac ✦")) return;
+        if (e.getClickedInventory() != forgeGUI) return;
 
         BackpackManager backpackManager = Main.getInstance().getBackpackManager();
         ItemManager itemManager = Main.getInstance().getItemManager();
@@ -167,9 +170,18 @@ public class ForgeListener implements Listener {
             backpackManager.applyEnderRune(sacItem);
             player.sendMessage("§5§lRune d'Ender appliquée avec succès !");
 
-        } else {
+        } else if (runeItem.isSimilar(itemManager.soulUpgradeItem())) {
+            if (backpackManager.hasSoulUnlock(sacItem)) {
+                player.sendMessage("§cCe sac possède déjà la §e§lRune d'Âme§c !");
+                return;
+            }
+            backpackManager.applySoulRune(sacItem);
+            player.sendMessage("§6§lRune d'Âme appliquée avec succès !");
+        }else {
             return;
         }
+
+        if(sacItem == null) return;
 
         player.getInventory().addItem(sacItem);
         gui.setItem(SLOT_SAC, itemManager.forgeSlotSacItem());
@@ -179,7 +191,7 @@ public class ForgeListener implements Listener {
 
     @EventHandler
     public void onForgeClose(@NonNull InventoryCloseEvent e) {
-        if(!e.getView().getTitle().equals("§6§l✦ Forge de Sac ✦")) return;
+        if(e.getInventory() != forgeGUI) return;
 
         Inventory gui = e.getInventory();
         Player player = (Player) e.getPlayer();

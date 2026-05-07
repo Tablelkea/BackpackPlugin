@@ -1,13 +1,15 @@
 package fr.kilian.backpackV2;
 
-import fr.kilian.backpackV2.listeners.ForgeListener;
 import fr.kilian.backpackV2.listeners.BackpackListener;
+import fr.kilian.backpackV2.listeners.ForgeListener;
 import fr.kilian.backpackV2.listeners.PlayerInteractListener;
 import fr.kilian.backpackV2.managers.BackpackManager;
 import fr.kilian.backpackV2.managers.CraftManager;
 import fr.kilian.backpackV2.managers.ForgeManager;
 import fr.kilian.backpackV2.managers.ItemManager;
 import org.bukkit.NamespacedKey;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -33,8 +35,8 @@ public final class Main extends JavaPlugin {
         craftManager = new CraftManager();
         itemManager = new ItemManager();
 
-        getCommand("debug").setExecutor(new DebugCommand());
-        getCommand("nbt").setExecutor(new NBTCommand());
+        registerCommand("debug", new DebugCommand());
+        registerCommand("debug", new NBTCommand());
 
         PluginManager pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new BackpackListener(), this);
@@ -70,14 +72,17 @@ public final class Main extends JavaPlugin {
         return itemManager;
     }
 
-    public static HashMap<String, NamespacedKey> getNbtList() {
-        return nbtList;
-    }
-
     public @NonNull NamespacedKey registerNBT(String key){
         NamespacedKey namespacedKey = new NamespacedKey(this, key);
         nbtList.put(key, namespacedKey);
 
         return namespacedKey;
+    }
+
+    public void registerCommand(String command, CommandExecutor commandExecutor){
+        PluginCommand cmd = Main.getInstance().getCommand(command);
+        if(cmd == null) return;
+
+        cmd.setExecutor(commandExecutor);
     }
 }

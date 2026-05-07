@@ -44,7 +44,7 @@ public class NBTCommand implements TabExecutor {
 
                 int size = Math.max(9, (int) Math.ceil(keys.size() / 9.0) * 9);
                 size = Math.min(size, 54);
-                Inventory gui = Bukkit.createInventory(null, size, "§8§lNBT: §7" + item.getType().name());
+                Inventory gui = Bukkit.createInventory(null, size, Component.text("§8§lNBT: §7" + item.getType().name()));
 
                 if(keys.isEmpty()){
                     ItemStack empty = new ItemStack(Material.BARRIER);

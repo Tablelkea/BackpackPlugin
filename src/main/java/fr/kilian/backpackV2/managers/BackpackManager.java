@@ -1,5 +1,7 @@
 package fr.kilian.backpackV2.managers;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import fr.kilian.backpackV2.DebugCommand;
 import fr.kilian.backpackV2.Main;
 import net.kyori.adventure.text.Component;
@@ -11,47 +13,51 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.profile.PlayerProfile;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 public class BackpackManager implements Listener {
 
-    private final HashMap<String, Inventory> backpacks_level1 = new HashMap<>();
-    private final HashMap<String, Inventory> backpacks_level2 = new HashMap<>();
-    private final HashMap<String, Inventory> backpacks_level3 = new HashMap<>();
-
-
-
     public NamespacedKey craftUpgrade = Main.getInstance().registerNBT( "craft-upgrade");
     public NamespacedKey enderchestUpgrade =Main.getInstance().registerNBT( "enderchest-upgrade");
+    public NamespacedKey soulUpgrage = Main.getInstance().registerNBT("soul-upgrade");
+    public NamespacedKey runeHeaderKey = Main.getInstance().registerNBT("rune-header");
 
-    public @NonNull PlayerProfile createPlayerProfile(String url, String name) throws MalformedURLException {
-        PlayerProfile profile = Bukkit.createPlayerProfile(name);
-        profile.getTextures().setSkin(URI.create(url).toURL());
+    public PlayerProfile createPlayerProfile(String textureUrl, String name) {
+        PlayerProfile profile =
+                Bukkit.createProfile(UUID.randomUUID(), name);
+
+        String json = "{\"textures\":{\"SKIN\":{\"url\":\"" + textureUrl + "\"}}}";
+        String base64 = Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+
+        profile.setProperty(new ProfileProperty("textures", base64));
         return profile;
     }
 
+    private void addRuneLore(@org.jspecify.annotations.NonNull ItemMeta meta, String runeLine) {
+        List<Component> lore = meta.lore();
+        if (lore == null) lore = new ArrayList<>();
+
+        // Ajoute le header une seule fois
+        if (!meta.getPersistentDataContainer().has(runeHeaderKey)) {
+            meta.getPersistentDataContainer().set(runeHeaderKey, PersistentDataType.BOOLEAN, true);
+            lore.add(Component.text(" "));
+            lore.add(Component.text("§3§lRunes équipées :"));
+        }
+
+        lore.add(Component.text("§a    - " + runeLine));
+        meta.lore(lore);
+    }
+
     public void applyCraftRune(ItemStack backpack) {
-        if(!isBackpack(backpack)) return;
+        if (!isBackpack(backpack)) return;
         backpack.editMeta(meta -> {
             meta.getPersistentDataContainer().set(craftUpgrade, PersistentDataType.BOOLEAN, true);
-            List<Component> lore = meta.lore();
-
-            if(!meta.getPersistentDataContainer().has(enderchestUpgrade)){
-                lore.add(Component.text(" "));
-                lore.add(Component.text("§3Runes équipées: "));
-            }
-
-            lore.add(Component.text("§a    - Rune de Craft"));
-            meta.lore(lore);
-
+            addRuneLore(meta, "Rune de Craft");
         });
     }
 
@@ -62,18 +68,10 @@ public class BackpackManager implements Listener {
     }
 
     public void applyEnderRune(ItemStack backpack) {
-        if(!isBackpack(backpack)) return;
+        if (!isBackpack(backpack)) return;
         backpack.editMeta(meta -> {
             meta.getPersistentDataContainer().set(enderchestUpgrade, PersistentDataType.BOOLEAN, true);
-            List<Component> lore = meta.lore();
-
-            if(!meta.getPersistentDataContainer().has(craftUpgrade)){
-                lore.add(Component.text(" "));
-                lore.add(Component.text("§3§lRunes équipées: "));
-            }
-
-            lore.add(Component.text("§a    - Rune d'ender"));
-            meta.lore(lore);
+            addRuneLore(meta, "Rune d'Ender");
         });
     }
 
@@ -81,6 +79,20 @@ public class BackpackManager implements Listener {
         if(backpack == null || backpack.getItemMeta() == null) return false;
         Boolean value = backpack.getItemMeta().getPersistentDataContainer().get(enderchestUpgrade, PersistentDataType.BOOLEAN);
         return value != null && value;
+    }
+
+    public void applySoulRune(ItemStack backpack) {
+        if (!isBackpack(backpack)) return;
+        backpack.editMeta(meta -> {
+            meta.getPersistentDataContainer().set(soulUpgrage, PersistentDataType.BOOLEAN, true);
+            addRuneLore(meta, "Rune d'Âme");
+        });
+    }
+
+    public boolean hasSoulUnlock(ItemStack backpack) {
+        if (backpack == null || !backpack.hasItemMeta()) return false;
+        PersistentDataContainer pdc = backpack.getItemMeta().getPersistentDataContainer();
+        return pdc.has(soulUpgrage, PersistentDataType.BOOLEAN);
     }
 
     public String getBackpackId(ItemStack item) {
@@ -98,32 +110,21 @@ public class BackpackManager implements Listener {
         return getBackpackId(item) != null;
     }
 
+    private final HashMap<String, Inventory> backpacks = new HashMap<>();
+
     public Inventory getPlayerBackpack(ItemStack itemStack) {
         String backpackId = getBackpackId(itemStack);
-        if(backpackId == null) return null;
+        if (backpackId == null) return null;
 
-        int level = getBackpackLevel(itemStack);
+        int size = switch (getBackpackLevel(itemStack)) {
+            case 1 -> 36;
+            case 2 -> 45;
+            default -> 54;
+        };
 
-        switch(level) {
-            case 1 -> {
-                backpacks_level1.computeIfAbsent(backpackId, id ->
-                        Bukkit.createInventory(null, 36, Component.text("§8§lSac a dos"))
-                );
-                return backpacks_level1.get(backpackId);
-            }
-            case 2 -> {
-                backpacks_level2.computeIfAbsent(backpackId, id ->
-                        Bukkit.createInventory(null, 45, Component.text("§8§lSac a dos"))
-                );
-                return backpacks_level2.get(backpackId);
-            }
-            default -> {
-                backpacks_level3.computeIfAbsent(backpackId, id ->
-                        Bukkit.createInventory(null, 54, Component.text("§8§lSac a dos"))
-                );
-                return backpacks_level3.get(backpackId);
-            }
-        }
+        return backpacks.computeIfAbsent(backpackId,
+                id -> Bukkit.createInventory(null, size, Component.text("§8§lSac a dos"))
+        );
     }
 
     public void openBackpack(ItemStack itemStack, UUID playerUUID) {
