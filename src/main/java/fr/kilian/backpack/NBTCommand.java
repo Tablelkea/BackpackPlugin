@@ -1,4 +1,4 @@
-package fr.kilian.backpackV2;
+package fr.kilian.backpack;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;

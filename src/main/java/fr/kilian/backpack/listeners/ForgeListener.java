@@ -1,9 +1,9 @@
-package fr.kilian.backpackV2.listeners;
+package fr.kilian.backpack.listeners;
 
-import fr.kilian.backpackV2.Main;
-import fr.kilian.backpackV2.managers.BackpackManager;
-import fr.kilian.backpackV2.managers.ForgeManager;
-import fr.kilian.backpackV2.managers.ItemManager;
+import fr.kilian.backpack.Main;
+import fr.kilian.backpack.managers.BackpackManager;
+import fr.kilian.backpack.managers.ForgeManager;
+import fr.kilian.backpack.managers.ItemManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

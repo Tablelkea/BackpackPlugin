@@ -1,9 +1,9 @@
-package fr.kilian.backpackV2.managers;
+package fr.kilian.backpack.managers;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
-import fr.kilian.backpackV2.DebugCommand;
-import fr.kilian.backpackV2.Main;
+import fr.kilian.backpack.DebugCommand;
+import fr.kilian.backpack.Main;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;

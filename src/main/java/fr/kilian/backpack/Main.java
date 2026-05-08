@@ -1,10 +1,10 @@
-package fr.kilian.backpackV2;
+package fr.kilian.backpack;
 
-import fr.kilian.backpackV2.listeners.*;
-import fr.kilian.backpackV2.managers.BackpackManager;
-import fr.kilian.backpackV2.managers.CraftManager;
-import fr.kilian.backpackV2.managers.ForgeManager;
-import fr.kilian.backpackV2.managers.ItemManager;
+import fr.kilian.backpack.listeners.*;
+import fr.kilian.backpack.managers.BackpackManager;
+import fr.kilian.backpack.managers.CraftManager;
+import fr.kilian.backpack.managers.ForgeManager;
+import fr.kilian.backpack.managers.ItemManager;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;

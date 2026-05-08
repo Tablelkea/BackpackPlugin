@@ -1,7 +1,7 @@
-package fr.kilian.backpackV2.listeners;
+package fr.kilian.backpack.listeners;
 
-import fr.kilian.backpackV2.Main;
-import fr.kilian.backpackV2.managers.BackpackManager;
+import fr.kilian.backpack.Main;
+import fr.kilian.backpack.managers.BackpackManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

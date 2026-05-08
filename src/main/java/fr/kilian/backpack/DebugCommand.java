@@ -1,6 +1,6 @@
-package fr.kilian.backpackV2;
+package fr.kilian.backpack;
 
-import fr.kilian.backpackV2.managers.ItemManager;
+import fr.kilian.backpack.managers.ItemManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

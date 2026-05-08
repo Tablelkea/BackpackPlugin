@@ -1,6 +1,6 @@
 name: BackpackV2
 version: '1.0'
-main: fr.kilian.backpackV2.Main
+main: fr.kilian.backpack.Main
 api-version: '1.21'
 commands:
   debug:

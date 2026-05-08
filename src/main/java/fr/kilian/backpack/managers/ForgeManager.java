@@ -1,6 +1,6 @@
-package fr.kilian.backpackV2.managers;
+package fr.kilian.backpack.managers;
 
-import fr.kilian.backpackV2.Main;
+import fr.kilian.backpack.Main;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
