@@ -5,6 +5,7 @@ import fr.kilian.backpack.managers.BackpackManager;
 import fr.kilian.backpack.managers.ForgeManager;
 import fr.kilian.backpack.managers.ItemManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -54,7 +55,6 @@ public class ForgeListener implements Listener {
         if(e.getClickedBlock() == null) return;
         if(!forgeManager.isForgeBlock(e.getClickedBlock())) return;
 
-        e.setCancelled(true);
         Player player = e.getPlayer();
 
         Inventory forgeGUI = Bukkit.createInventory(null, 27, Component.text("§6§l✦ Forge de Sac ✦"));
@@ -70,17 +70,22 @@ public class ForgeListener implements Listener {
 
     @EventHandler
     public void onGuiClick(@NonNull InventoryClickEvent e) {
-        if (!(e.getWhoClicked() instanceof Player player)) return;
+        if(!(e.getWhoClicked() instanceof Player player)) return;
 
-        if (!e.getView().title().equals(Component.text("§6§l✦ Forge de Sac ✦"))) return;
+        String title = PlainTextComponentSerializer.plainText()
+                .serialize(e.getView().title());
 
+        if(!title.equals("§8§lSac a dos")) return; // ← même titre que dans getPlayerBackpack()
+
+        Inventory gui = e.getClickedInventory();
         BackpackManager backpackManager = Main.getInstance().getBackpackManager();
         ItemManager itemManager = Main.getInstance().getItemManager();
-        Inventory gui = e.getInventory();
-        ItemStack currentItem = e.getCurrentItem();
         int slot = e.getSlot();
 
-        e.setCancelled(true);
+        if(gui == null || gui == player.getInventory()) return;
+
+        ItemStack currentItem = e.getCurrentItem();
+
 
         if (currentItem == null || currentItem.getType().isAir()) return;
 
@@ -90,6 +95,7 @@ public class ForgeListener implements Listener {
         if (clickedInPlayerInv) {
 
             if (backpackManager.isBackpack(currentItem)) {
+                e.setCancelled(true);
                 ItemStack previousSac = gui.getItem(SLOT_SAC);
 
                 if (previousSac != null && backpackManager.isBackpack(previousSac)) {
@@ -113,7 +119,7 @@ public class ForgeListener implements Listener {
         }
 
         if (clickedInGui) {
-
+            e.setCancelled(true);
             if (slot == SLOT_SAC && backpackManager.isBackpack(currentItem)) {
                 player.getInventory().addItem(currentItem);
                 gui.setItem(SLOT_SAC, itemManager.forgeSlotSacItem());
@@ -133,7 +139,7 @@ public class ForgeListener implements Listener {
             ItemStack runeItem = gui.getItem(SLOT_RUNE);
 
             boolean sacOk = backpackManager.isBackpack(sacItem);
-            boolean runeOk = runeItem != null && itemManager.isRune(currentItem);
+            boolean runeOk = runeItem != null && itemManager.isRune(runeItem);
 
             gui.setItem(SLOT_CONFIRM, sacOk && runeOk
                     ? itemManager.forgeConfirmItem()
